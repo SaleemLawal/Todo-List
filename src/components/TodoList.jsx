@@ -1,47 +1,48 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import {getLocalStorageItems, setLocalStorageItems} from '../utils/localStorage'
 
 import '../styles/index.css'
 import TodoItem from './TodoItem'
-import AddTodo from './AddTodo';
+import AddTodo from './AddTodo'
 import Button from './Button'
-import {getLocalStorageItems, setLocalStorageItems} from '../utils/localStorage'
 
 const TodoList = () => {
-    // state to monitor form selected
     const [selected, setSelected] = useState('all')
-    // state to monitor add
-    const [showAddTodo, setShowAddTodo] = useState(false);
-    // state to monitor the todos with the local storage API
-    const [todos, setTodos] = useState([]);
-    const [currData, setCurrData] = useState(null)
+    const [showForm, setFormShow] = useState(false)
+    const [todos, setTodos] = useState([])
+    const currDataRef = useRef(null);
 
-    // effects that runs once and populates our todo arr with the local storage
-    useEffect(() => {setTodos(getLocalStorageItems())}, []);
+
+    useEffect(() => {
+        setTodos(getLocalStorageItems())
+    }, [])
     
     // main deletion function 
     const handleDelete = (id) => {
         // filters the id
         const updatedTodos = todos.filter(todo => todo.id !== id);
-        // update state
+        // update state and local storage
         setTodos(updatedTodos);
         setLocalStorageItems(updatedTodos);
     };
     
-    function handleChange(e){
-        const val = e.target.value
-        setSelected(val)
+    const handleChange = (e) => {
+        // gets the input of selected
+        setSelected(e.target.value)
     }
     
-    function handlePopUp(){
-        setShowAddTodo(true)
-    }
+    const showModal = () => {
+        setFormShow(true)
+    };
+    
+    const handleCancel = () => {
+        currDataRef.current = null
+        setFormShow(false)
+    };
 
-    function handleUpdate(data){
-        setShowAddTodo(true)
-    }
-    
-    function handleCancel(){
-        setShowAddTodo(false)
+    const editTodoItem = (data) => {
+        currDataRef.current = data
+        setFormShow(true)
     }
 
     const data = getLocalStorageItems()
@@ -49,23 +50,19 @@ const TodoList = () => {
     const incompleteTasks = data.filter(task => task.selectStatus === 'incomplete');
     const completedTasks = data.filter(task => task.selectStatus === 'completed');
     
-    
     const incompleteTasksList = incompleteTasks.map((currData) => (
-        <TodoItem key = {currData.id} data = {currData} onDelete = {handleDelete} handlePopUp = {handlePopUp}/>
+        <TodoItem key = {currData.id} data = {currData} onDelete = {handleDelete} editTodo = {editTodoItem}/>
     ))
 
     const completedTasksList = completedTasks.map((currData) => (
-        <TodoItem key = {currData.id} data = {currData} onDelete={handleDelete} handlePopUp = {handlePopUp}/>
+        <TodoItem key = {currData.id} data = {currData} onDelete={handleDelete} editTodo = {editTodoItem}/>
     ))
 
 
     const displayAll = 
         <>
-            {/* render Task to Do */}
             <h2 className='mt-4 text-base font-normal text-white md:mt-9'> Task to do {incompleteTasks.length === 0 ? "" : `- ${incompleteTasks.length}`}</h2>
             {incompleteTasksList}
-            
-            {/* Render Done */}
             <h2 className='mt-4 text-base font-normal text-white md:mt-9'> Done {completedTasks.length === 0 ? "" : `- ${completedTasks.length}`}</h2>
             {completedTasksList}
 
@@ -73,14 +70,12 @@ const TodoList = () => {
         
     const displayCompleted = 
         <>
-            {/* Render Done */}
             <h2 className='mt-4 text-base font-normal text-white md:mt-9'> Done {completedTasks.length === 0 ? "" : `- ${completedTasks.length}`}</h2>
             {completedTasksList}
         </>
         
     const displayIncomplete = 
         <>
-            {/* render Task to Do */}
             <h2 className='mt-4 text-base font-normal text-white md:mt-9'> Task to do {incompleteTasks.length === 0 ? "" : `- ${incompleteTasks.length}`}</h2>
             {incompleteTasksList}
         </>
@@ -113,16 +108,17 @@ const TodoList = () => {
     <div className=" mt-2 min-h-[850px] w-[390px] overflow-hidden rounded-lg bg-[#1D1825] p-3 md:mt-7 md:min-h-[758px] md:w-[585px] md:rounded-[20px] md:p-10">
       {/* Makes the two action buttons */}
         <div className='flex items-center justify-between'>
-            <Button text ="Add Task" onPressed = {handlePopUp} svg = {mainButtonSvg} styling = "p-1 bg-item--bg--color button--text--style md:text-xl md:p-2"/>
+            <Button text ="Add Task" onPressed = {showModal} svg = {mainButtonSvg} styling = "p-1 bg-item--bg--color button--text--style md:text-xl md:p-2"/>
         {/* Makes the selected option */}
         <select name="selectedListing" defaultValue="All" className="p-1 bg-item--bg--color button--text--style md:text-xl md:p-2" onChange={handleChange}>
             <option value="all">All</option>
-            <option value="completed">Completed</option>
             <option value="incomplete">Incomplete</option>
+            <option value="completed">Completed</option>
         </select>
         </div>
         {handleDisplay()}
-        <AddTodo onCancel={handleCancel} hide = {showAddTodo} setTodos = {setTodos} currTodoList = {todos} data = {currData}/>
+        {/* Render Add to do only when showForm == true */}
+        {showForm && <AddTodo onCancel={handleCancel} hide = {showForm} setTodos = {setTodos} dataRef = {currDataRef}/>}
     
     </div>
   );
