@@ -1,15 +1,16 @@
-/* eslint-disable react/prop-types */
+import PropTypes from 'prop-types'
 import deleteSvg from '../assets/delete.svg';
 import editSvg from '../assets/edit.svg';
 import '../styles/index.css'
 
-const TodoItem = ({data, onDelete, handlePopUp}) => {
-    // remove the todo with the specified id
+const TodoItem = ({data, onDelete, editTodo}) => {
+    // handle functionalities regarding delete and edit
     function handleDelete(){
         onDelete(data.id)        
     }
+
     function handleEdit(){
-        handlePopUp(data)
+        editTodo(data)
     }
   return (
     <div className=" rounded-[10px] bg-item--bg--color flex items-center justify-between min-w-[310px] h-[75px] p-2 mt-2">
@@ -27,5 +28,11 @@ const TodoItem = ({data, onDelete, handlePopUp}) => {
     </div>
   );
 };
+
+TodoItem.propTypes = {
+    data: PropTypes.object,
+    onDelete: PropTypes.func,
+    editTodo: PropTypes.func
+}
 
 export default TodoItem;
