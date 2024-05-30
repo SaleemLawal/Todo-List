@@ -1,49 +1,27 @@
-/* eslint-disable react/prop-types */
 import { useState, useEffect } from 'react';
+import {addToStorage, getLocalStorageItems} from '../utils/localStorage'
 
+import PropTypes from 'prop-types'
 import '../styles/index.css'
 import cancelSvg from '../assets/cancel.svg'
 import ButtonItem from './Button'
 
-import {addToStorage, getLocalStorageItems} from '../utils/localStorage'
-
-// eslint-disable-next-line react/prop-types
-function AddTodo({ onCancel, hide, setTodos, currTodoList, data}) {
+function AddTodo({ onCancel, hide, setTodos, dataRef}) {
     // stores the form inputs
     const [inputs, setInput] = useState({
         title: '',
         selectStatus: 'incomplete',
     })
-
+    // populates the inputs if valid data and re-render
     useEffect(() => {
-        if (data) {
+        if (dataRef.current) {
             setInput({
-                title: data.title,
-                selectStatus: data.selectStatus
+                title: dataRef.current.title,
+                selectStatus: dataRef.current.selectStatus
             });
         }
-    }, [data]);
+    }, [dataRef]);
 
-
-
-    function handleSubmit(e){
-        e.preventDefault();
-        // make a new todo and add it to the storage
-        const todos = getLocalStorageItems();
-        const newId = todos.length ? todos[todos.length - 1].id + 1 : 0;
-        const newTodo = { ...inputs, id: newId };
-
-        addToStorage(newTodo)
-        // update the state with the new todo also
-        setTodos(() => {
-            return [
-                ...currTodoList, newTodo
-            ]
-        })
-        // cancel the modal
-        onCancel()
-    }
-    
     function handleChange(e){
         const {name, value} = e.target
         setInput(prev => {
@@ -52,6 +30,26 @@ function AddTodo({ onCancel, hide, setTodos, currTodoList, data}) {
             }
         })
     }
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        const todos = getLocalStorageItems();
+        const newId = todos.length ? todos[todos.length - 1].id + 1 : 0;
+        let newTodo;
+        // assign new id if new todo, same id if editting prev todo
+        if (!dataRef.current) {
+            newTodo = { ...inputs, id: newId };
+        } else {
+            newTodo = { ...inputs, id: dataRef.current.id };
+        }
+        addToStorage(newTodo);
+
+        const updatedTodos = getLocalStorageItems();
+        setTodos(updatedTodos);
+
+        onCancel();
+    }
+    
     // form element
     const form = (
         <form id="form" className="bg-[#1D1825]" onSubmit={handleSubmit}>
@@ -71,7 +69,7 @@ function AddTodo({ onCancel, hide, setTodos, currTodoList, data}) {
                     <option value="completed">Completed</option>
                 </select>
 
-                <ButtonItem text={`${data ? "Update task " : "Add Task"}`} styling="p-1 button--text--style md:text-xl md:p-2 mr-4 bg-green-300" />
+                <ButtonItem text={`${dataRef.current ? "Update Task" : "Add Task"}`} styling="p-1 button--text--style md:text-xl md:p-2 mr-4 bg-green-300" />
                 <ButtonItem text="Cancel" styling="p-1 button--text--style md:text-xl md:p-2 bg-red-300" onPressed={onCancel} />
             </div>
         </form>
@@ -83,6 +81,13 @@ function AddTodo({ onCancel, hide, setTodos, currTodoList, data}) {
             {hide && form}
         </div>
     );
+}
+
+AddTodo.propTypes = {
+    onCancel: PropTypes.func,
+    hide: PropTypes.bool,
+    setTodos: PropTypes.func,
+    dataRef: PropTypes.object
 }
 
 export default AddTodo;
