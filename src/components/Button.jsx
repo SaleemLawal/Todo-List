@@ -1,4 +1,5 @@
-/* eslint-disable react/prop-types */
+import PropTypes from 'prop-types';
+
 //button template
 const ButtonItem = (props) => {
     return (
@@ -7,5 +8,11 @@ const ButtonItem = (props) => {
             {props.svg}
         </button>
     )
+}
+ButtonItem.propTypes = {
+    onPressed: PropTypes.func,
+    styling: PropTypes.string.isRequired,
+    text: PropTypes.string.isRequired,
+    svg: PropTypes.node
 }
 export default ButtonItem
